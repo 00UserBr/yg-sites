@@ -814,4 +814,33 @@ body.is-preview-open {
   .auth__input {
     font-size: 16px;
   }
+
+  /* prévia mobile: titulo + ferramentas na 1a linha, tamanhos na 2a */
+  .device-preview__panel {
+    padding: 0.8rem;
+    gap: 0.6rem;
+  }
+
+  .device-preview__header {
+    gap: 0.5rem;
+  }
+
+  .device-preview__title {
+    order: 1;
+  }
+
+  .device-preview__tools {
+    order: 2;
+  }
+
+  .device-preview__sizes {
+    order: 3;
+    flex: 1 1 100%;
+  }
+
+  .device-preview__sizes .chip {
+    flex: 1;
+    padding: 0.4rem 0.5rem;
+    text-align: center;
+  }
 }
