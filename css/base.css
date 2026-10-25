@@ -1,0 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg: #000000;
+  --bg-2: #050510;
+  --surface: radial-gradient(120% 120% at 50% 0%, rgba(37, 99, 235, 0.16) 0%, rgba(5, 5, 16, 0.9) 55%, #000000 100%);
+  --panel: linear-gradient(160deg, rgba(37, 99, 235, 0.18) 0%, rgba(10, 10, 20, 0.9) 100%);
+  --card: linear-gradient(165deg, rgba(59, 130, 246, 0.14) 0%, rgba(9, 9, 18, 0.95) 100%);
+  --stroke: rgba(59, 130, 246, 0.4);
+  --stroke-soft: rgba(148, 163, 184, 0.18);
+  --blue: #2563eb;
+  --blue-glow: rgba(37, 99, 235, 0.55);
+  --cyan: #60a5fa;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5f5;
+  --text-tertiary: #94a3b8;
+  --white: #ffffff;
+  --success: #22c55e;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  scroll-behavior: smooth;
+  scroll-padding-top: 96px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  letter-spacing: -0.015em;
+  font-feature-settings: "kern" 1, "liga" 1, "clig" 1;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  line-height: 1.7;
+  overflow-x: hidden;
+  font-kerning: normal;
+  font-variant-ligatures: common-ligatures;
+  letter-spacing: -0.015em;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(59, 130, 246, 0.08) 1px, transparent 1px);
+  background-size: 160px 160px;
+  opacity: 0.25;
+  mix-blend-mode: screen;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at top, rgba(37, 99, 235, 0.14) 0%, transparent 55%);
+}
+
+main {
+  position: relative;
+  z-index: 1;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+ul {
+  list-style: none;
+}
+
+button {
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+.container {
+  width: min(1180px, 100% - 2rem);
+  margin: 0 auto;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.text-gradient {
+  background: linear-gradient(90deg, #ffffff 0%, #60a5fa 38%, #2563eb 100%);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.noise-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.02'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+}

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel | YG Sites - Catálogo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.min.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+
+<body>
+  <header class="admin-header">
+    <div class="container admin-header__inner">
+      <div class="admin-header__group">
+        <a class="admin-back" href="index.html">
+          <i class="ri-arrow-left-line"></i>
+          <span>Voltar ao site</span>
+        </a>
+        <div class="brand">
+          <div class="brand__mark"></div>
+          <div class="brand__text-group">
+            <span class="brand__name">YG SITES</span>
+            <span class="brand__sub">PAINEL • CATÁLOGO</span>
+          </div>
+        </div>
+      </div>
+      <div class="header__actions">
+        <button class="btn btn--ghost" id="export-json">
+          <i class="ri-download-2-line"></i>
+          <span>Exportar JSON</span>
+        </button>
+        <button class="btn btn--primary" id="import-json-trigger">
+          <i class="ri-upload-2-line"></i>
+          <span>Importar JSON</span>
+        </button>
+        <input class="visually-hidden" type="file" id="import-json" accept="application/json">
+      </div>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <div class="container">
+      <header class="admin-hero">
+        <span class="admin-hero__kicker">Gerenciamento</span>
+        <h1 class="admin-hero__title">Catálogo de sites para vender</h1>
+        <p class="admin-hero__desc">
+          Adicione, edite ou remova os projetos que aparecem na seção "Portfólio" da homepage. Tudo fica salvo no
+          <strong>localStorage</strong> deste navegador. Exporte o JSON para guardar um backup ou replicar em outro
+          dispositivo.
+        </p>
+      </header>
+
+      <div class="admin-grid">
+        <section class="admin-panel">
+          <header class="admin-panel__header">
+            <div class="admin-panel__title-group">
+              <h2 class="admin-panel__title" id="form-title">Adicionar novo projeto</h2>
+              <p class="admin-panel__subtitle">Preencha os dados para exibir no portfólio</p>
+            </div>
+            <button class="btn btn--ghost" id="reset-form">
+              <i class="ri-refresh-line"></i>
+              <span>Limpar</span>
+            </button>
+          </header>
+          <form class="admin-form" id="project-form">
+            <input type="hidden" id="project-id">
+            <div class="form-field">
+              <label class="form-label" for="project-name">Nome do projeto</label>
+              <input class="form-input" id="project-name" placeholder="Ex: Site para Clínica Odontológica" required>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="project-desc">Descrição curta</label>
+              <textarea class="form-textarea" id="project-desc"
+                placeholder="Fale objetivamente sobre proposta, público e objetivo. Foque em credibilidade." required></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label" for="project-tags">Tags (separadas por vírgula)</label>
+                <input class="form-input" id="project-tags" placeholder="Autorais, Responsivo, Conversão">
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="project-link">Link (opcional)</label>
+                <input class="form-input" id="project-link" placeholder="https://... ou deixe vazio">
+              </div>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="project-cover">Capa/Referência (URL opcional)</label>
+              <input class="form-input" id="project-cover" placeholder="https://i.imgur.com/...">
+            </div>
+            <div class="form-actions">
+              <button class="btn btn--primary" type="submit">
+                <i class="ri-save-3-line"></i>
+                <span id="submit-label">Salvar projeto</span>
+              </button>
+              <button class="btn btn--ghost" type="button" id="cancel-edit" hidden>
+                <span>Cancelar edição</span>
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <section class="admin-list">
+          <header class="admin-list__header">
+            <div class="admin-panel__title-group">
+              <h2 class="admin-panel__title">Projetos cadastrados</h2>
+              <p class="admin-panel__subtitle">Arraste mentalmente: estes aparecem em ordem de cadastro</p>
+            </div>
+            <button class="btn btn--ghost" id="clear-all">
+              <i class="ri-delete-bin-6-line"></i>
+              <span>Limpar catálogo</span>
+            </button>
+          </header>
+          <div class="admin-list__items" id="admin-list"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/admin.js"></script>
+</body>
+
+</html>
