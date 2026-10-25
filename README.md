@@ -4,6 +4,7 @@ Site institucional + painel de catálogo da **YG Sites** (azul, preto e branco).
 
 - **Site:** https://ygsites.vercel.app
 - **Painel (com senha):** https://ygsites.vercel.app/admin.html
+- **WhatsApp:** (19) 99247-5445 — https://wa.me/5519992475445
 - **Dados do catálogo (privado):** https://github.com/00UserBr/yg-sites-data
 
 ## Estrutura

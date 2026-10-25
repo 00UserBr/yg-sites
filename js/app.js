@@ -132,8 +132,35 @@ function setYear() {
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 }
 
+function initMobileNav() {
+  const header = document.querySelector(".header");
+  const toggle = document.querySelector(".nav__toggle");
+  const nav = document.getElementById("primary-nav");
+  if (!header || !toggle) return;
+
+  const icon = toggle.querySelector("i");
+
+  const setOpen = (open) => {
+    header.classList.toggle("is-open", open);
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.setAttribute("aria-label", open ? "Fechar menu" : "Abrir menu");
+    if (icon) icon.className = open ? "ri-close-line" : "ri-menu-3-line";
+  };
+
+  toggle.addEventListener("click", () => setOpen(!header.classList.contains("is-open")));
+
+  nav?.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => setOpen(false));
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && header.classList.contains("is-open")) setOpen(false);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   setYear();
+  initMobileNav();
   renderPortfolio(readCache());
 
   const items = await loadProjects();
