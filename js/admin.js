@@ -1,5 +1,113 @@
 const STORAGE_KEY = "ygsites-catalog-v1";
 
+/* ---------- Proteção por senha ---------- */
+
+const AUTH_KEY = "ygsites-admin-auth";
+const AUTH_SALT = "ygsites::";
+const AUTH_HASH = "e28849a0dbbbf3981868540a187c4e326599f9f0e260d6715132d5e14021d29d";
+const AUTH_HASH_FALLBACK = "98641730";
+
+const authGate = document.getElementById("auth-gate");
+const authForm = document.getElementById("auth-form");
+const authInput = document.getElementById("auth-password");
+const authError = document.getElementById("auth-error");
+const authToggle = document.getElementById("auth-toggle");
+const authSubmit = document.getElementById("auth-submit");
+const adminApp = document.getElementById("admin-app");
+const logoutBtn = document.getElementById("logout");
+
+function fnv1a(text) {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return hash.toString(16);
+}
+
+async function hashPassword(value) {
+  const text = AUTH_SALT + value;
+  if (window.crypto && window.crypto.subtle) {
+    const data = new TextEncoder().encode(text);
+    const digest = await window.crypto.subtle.digest("SHA-256", data);
+    return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  return fnv1a(text);
+}
+
+function unlock({ remember = true } = {}) {
+  adminApp.hidden = false;
+  authGate.hidden = true;
+  document.body.classList.remove("is-locked");
+  if (remember) sessionStorage.setItem(AUTH_KEY, "1");
+}
+
+function lock() {
+  adminApp.hidden = true;
+  authGate.hidden = false;
+  document.body.classList.add("is-locked");
+  sessionStorage.removeItem(AUTH_KEY);
+  authInput.value = "";
+  authInput.type = "password";
+  authError.hidden = true;
+  authInput.focus();
+}
+
+if (sessionStorage.getItem(AUTH_KEY) === "1") {
+  unlock({ remember: false });
+} else {
+  authInput.focus();
+}
+
+authForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const value = authInput.value.trim();
+  if (!value) {
+    authInput.focus();
+    return;
+  }
+
+  const label = authSubmit.querySelector("span");
+  authSubmit.disabled = true;
+  label.textContent = "Verificando...";
+
+  const hash = await hashPassword(value);
+  const ok = hash === AUTH_HASH || hash === AUTH_HASH_FALLBACK;
+
+  authSubmit.disabled = false;
+  label.textContent = "Entrar no painel";
+
+  if (ok) {
+    authError.hidden = true;
+    authInput.value = "";
+    unlock();
+    return;
+  }
+
+  authError.hidden = false;
+  authInput.value = "";
+  authGate.classList.remove("is-shaking");
+  void authGate.offsetWidth;
+  authGate.classList.add("is-shaking");
+  authInput.focus();
+});
+
+authGate.addEventListener("animationend", () => {
+  authGate.classList.remove("is-shaking");
+});
+
+authToggle.addEventListener("click", () => {
+  const hidden = authInput.type === "password";
+  authInput.type = hidden ? "text" : "password";
+  authToggle.querySelector("i").className = hidden ? "ri-eye-off-line" : "ri-eye-line";
+  authToggle.setAttribute("aria-label", hidden ? "Ocultar senha" : "Mostrar senha");
+  authInput.focus();
+});
+
+logoutBtn.addEventListener("click", lock);
+
+/* ---------- Catálogo ---------- */
+
 const form = document.getElementById("project-form");
 const idInput = document.getElementById("project-id");
 const nameInput = document.getElementById("project-name");
