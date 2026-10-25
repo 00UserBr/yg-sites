@@ -820,13 +820,13 @@
     display: none;
   }
 
-  .header__actions {
+  .header .header__actions {
     display: flex;
     margin-left: auto;
     padding-left: 0.4rem;
   }
 
-  .header__actions .btn--ghost {
+  .header .header__actions .btn--ghost {
     display: none;
   }
 
