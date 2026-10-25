@@ -59,11 +59,11 @@ body {
 }
 
 .admin-hero__title {
-  font-family: "Syne", "Inter", sans-serif;
-  font-weight: 800;
-  font-size: clamp(2.4rem, 6vw, 4.6rem);
-  letter-spacing: -0.04em;
-  line-height: 1.05;
+  font-family: "Sora", "Inter", sans-serif;
+  font-weight: 600;
+  font-size: clamp(1.9rem, 3.5vw, 2.9rem);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
 }
 
 .admin-hero__desc {
@@ -104,9 +104,9 @@ body {
 }
 
 .admin-panel__title {
-  font-family: "Syne", "Inter", sans-serif;
-  font-size: clamp(1.6rem, 3vw, 2.2rem);
-  letter-spacing: -0.04em;
+  font-family: "Sora", "Inter", sans-serif;
+  font-size: clamp(1.15rem, 2vw, 1.4rem);
+  letter-spacing: -0.02em;
 }
 
 .admin-panel__subtitle {
