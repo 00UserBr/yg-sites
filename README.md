@@ -15,9 +15,11 @@ css/base.css      tokens de cor, tipografia e reset
 css/home.css      estilos da página principal
 css/admin.css     estilos do painel e da tela de senha
 js/app.js         carrega o catálogo da API e renderiza o portfólio
-js/admin.js       login, CRUD do catálogo, importar/exportar JSON
+js/admin.js       login, CRUD do catálogo, upload de imagens, importar/exportar JSON
 api/login.js      valida a senha no servidor e devolve um token assinado
 api/catalog.js    GET público do catálogo / PUT autenticado
+api/upload.js     recebe a imagem do painel (autenticado) e grava no repositório
+api/image.js      entrega as imagens com cache longo
 lib/auth.js       hash da senha, assinatura e verificação do token
 lib/store.js      leitura e escrita no repositório privado de dados
 ```
@@ -32,6 +34,21 @@ lib/store.js      leitura e escrita no repositório privado de dados
   alteração é publicada.
 - `localStorage` é usado apenas como **cache** para a página abrir rápido
   (e continuar legível se a API estiver fora do ar).
+
+## Imagens do catálogo
+
+- O upload é feito no painel (`/admin.html`), no campo **Imagem do projeto**.
+- A imagem é reduzida no navegador para no máximo **1600px** e recomprimida em
+  JPEG antes de subir (o arquivo original pode ter até 12 MB).
+- `POST /api/upload` exige o token do painel, aceita JPG/PNG/WebP até 3 MB e
+  grava o arquivo em `images/` no repositório privado `yg-sites-data`.
+- O nome do arquivo é o **hash do conteúdo**, então a mesma imagem nunca é
+  gravada duas vezes e pode ficar em cache para sempre.
+- Quem serve a imagem é `GET /api/image?name=<hash>.<ext>`, com
+  `Cache-Control: immutable` (o Vercel guarda na borda).
+- O campo `cover` do `catalog.json` guarda apenas a URL (`/api/image?name=...`).
+- Trocar/remover a imagem no painel não apaga o arquivo antigo do repositório
+  (sem risco de quebrar projetos que ainda usam a mesma imagem).
 
 ## Variáveis de ambiente (Vercel → Production)
 

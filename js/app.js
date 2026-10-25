@@ -82,10 +82,17 @@ function renderPortfolio(projects) {
     const card = document.createElement("article");
     card.className = index === 0 ? "portfolio-card portfolio-card--wide" : "portfolio-card";
     const tags = Array.isArray(project.tags) ? project.tags.filter(Boolean) : [];
+    const cover = String(project.cover || "").trim();
+    const media = cover
+      ? `<div class="portfolio-card__media has-image">
+          <img class="portfolio-card__image" src="${escapeAttribute(cover)}" alt="Prévia do projeto ${escapeAttribute(project.name)}" loading="lazy" decoding="async">
+          <div class="noise-overlay"></div>
+        </div>`
+      : `<div class="portfolio-card__media">
+          <div class="noise-overlay"></div>
+        </div>`;
     card.innerHTML = `
-      <div class="portfolio-card__media">
-        <div class="noise-overlay"></div>
-      </div>
+      ${media}
       <div class="portfolio-card__content">
         <div class="portfolio-card__top">
           <h3 class="portfolio-card__title">${escapeHtml(project.name)}</h3>

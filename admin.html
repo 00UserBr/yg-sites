@@ -88,8 +88,9 @@
         <span class="admin-hero__kicker">Gerenciamento</span>
         <h1 class="admin-hero__title">Catálogo de sites para vender</h1>
         <p class="admin-hero__desc">
-          Adicione, edite ou remova os projetos que aparecem na seção "Portfólio" da homepage. Cada alteração é
-          publicada no site na hora — o catálogo fica salvo no servidor e aparece igual em qualquer dispositivo.
+          Adicione, edite ou remova os projetos que aparecem na seção "Portfólio" da homepage — incluindo a imagem de
+          cada um. Cada alteração é publicada no site na hora: o catálogo e as imagens ficam salvos no servidor e
+          aparecem igual em qualquer dispositivo.
         </p>
       </header>
 
@@ -127,8 +128,24 @@
               </div>
             </div>
             <div class="form-field">
-              <label class="form-label" for="project-cover">Capa/Referência (URL opcional)</label>
-              <input class="form-input" id="project-cover" placeholder="https://i.imgur.com/...">
+              <label class="form-label" for="project-image">Imagem do projeto</label>
+              <div class="uploader" id="uploader">
+                <div class="uploader__preview" id="uploader-preview" hidden>
+                  <img id="uploader-image" alt="Prévia da imagem enviada">
+                  <button class="uploader__remove" type="button" id="uploader-remove" aria-label="Remover imagem">
+                    <i class="ri-close-line"></i>
+                  </button>
+                </div>
+                <label class="uploader__drop" id="uploader-drop" for="project-image">
+                  <i class="ri-image-add-line"></i>
+                  <span class="uploader__title" id="uploader-title">Clique para enviar uma imagem</span>
+                  <span class="uploader__hint">ou arraste o arquivo aqui • JPG, PNG ou WebP até 12 MB</span>
+                </label>
+                <input class="visually-hidden" type="file" id="project-image"
+                  accept="image/jpeg,image/png,image/webp">
+              </div>
+              <p class="uploader__status" id="uploader-status" role="status" hidden></p>
+              <input type="hidden" id="project-cover">
             </div>
             <div class="form-actions">
               <button class="btn btn--primary" type="submit">

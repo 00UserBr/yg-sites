@@ -20,6 +20,13 @@ const descInput = document.getElementById("project-desc");
 const tagsInput = document.getElementById("project-tags");
 const linkInput = document.getElementById("project-link");
 const coverInput = document.getElementById("project-cover");
+const imageInput = document.getElementById("project-image");
+const uploaderEl = document.getElementById("uploader");
+const uploaderPreview = document.getElementById("uploader-preview");
+const uploaderImage = document.getElementById("uploader-image");
+const uploaderRemove = document.getElementById("uploader-remove");
+const uploaderStatus = document.getElementById("uploader-status");
+const uploaderTitle = document.getElementById("uploader-title");
 const listEl = document.getElementById("admin-list");
 const formTitle = document.getElementById("form-title");
 const submitLabel = document.getElementById("submit-label");
@@ -34,6 +41,7 @@ const clearAllBtn = document.getElementById("clear-all");
 
 let catalog = [];
 let authToken = sessionStorage.getItem(TOKEN_KEY) || "";
+let uploadingImage = false;
 
 /* ---------- Sincronização com o servidor ---------- */
 
@@ -227,6 +235,186 @@ logoutBtn.addEventListener("click", () => {
   setSync("");
 });
 
+/* ---------- Imagem de capa ---------- */
+
+const MAX_SOURCE_BYTES = 12 * 1024 * 1024; // arquivo escolhido
+const MAX_UPLOAD_BYTES = 2.5 * 1024 * 1024; // depois de otimizado
+const MAX_SIDE = 1600;
+
+function bytesOfDataUrl(dataUrl) {
+  const comma = dataUrl.indexOf(",");
+  if (comma < 0) return 0;
+  return Math.round(((dataUrl.length - comma - 1) * 3) / 4);
+}
+
+function setUploadStatus(message, kind = "ok") {
+  if (!uploaderStatus) return;
+  uploaderStatus.textContent = message || "";
+  uploaderStatus.hidden = !message;
+  uploaderStatus.dataset.kind = kind;
+}
+
+function applyCover(url) {
+  const value = String(url || "").trim();
+  coverInput.value = value;
+  uploaderEl.classList.toggle("has-image", Boolean(value));
+
+  if (value) {
+    uploaderImage.src = value;
+    uploaderPreview.hidden = false;
+    uploaderTitle.textContent = "Trocar imagem";
+  } else {
+    uploaderImage.removeAttribute("src");
+    uploaderPreview.hidden = true;
+    uploaderTitle.textContent = "Clique para enviar uma imagem";
+  }
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("read_failed"));
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadImageElement(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("decode_failed"));
+    img.src = src;
+  });
+}
+
+async function optimizeImage(file) {
+  const original = await readFileAsDataUrl(file);
+
+  // GIF mantém a animação; os demais formatos são reduzidos e recomprimidos.
+  if (file.type === "image/gif") return original;
+
+  try {
+    const img = await loadImageElement(original);
+    if (!img.width || !img.height) return original;
+
+    const scale = Math.min(1, MAX_SIDE / Math.max(img.width, img.height));
+    const width = Math.max(1, Math.round(img.width * scale));
+    const height = Math.max(1, Math.round(img.height * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return original;
+
+    ctx.fillStyle = "#05050c";
+    ctx.fillRect(0, 0, width, height);
+    ctx.drawImage(img, 0, 0, width, height);
+
+    const optimized = canvas.toDataURL("image/jpeg", 0.85);
+    if (!optimized || optimized.length < 64) return original;
+
+    const originalBytes = bytesOfDataUrl(original);
+    const optimizedBytes = bytesOfDataUrl(optimized);
+
+    return optimizedBytes < originalBytes || originalBytes > MAX_UPLOAD_BYTES ? optimized : original;
+  } catch (error) {
+    console.warn("Não foi possível otimizar a imagem, enviando original", error);
+    return original;
+  }
+}
+
+async function uploadCover(file) {
+  if (!file || uploadingImage) return;
+
+  if (!/^image\/(jpeg|png|webp|gif)$/i.test(file.type)) {
+    setUploadStatus("Formato não aceito. Use JPG, PNG ou WebP.", "error");
+    return;
+  }
+
+  if (file.size > MAX_SOURCE_BYTES) {
+    setUploadStatus("Imagem muito grande (máximo 12 MB). Reduza e tente de novo.", "error");
+    return;
+  }
+
+  uploadingImage = true;
+  uploaderEl.classList.add("is-busy");
+  setUploadStatus("Otimizando e enviando imagem...", "busy");
+
+  try {
+    const dataUrl = await optimizeImage(file);
+    const bytes = bytesOfDataUrl(dataUrl);
+
+    if (bytes > MAX_UPLOAD_BYTES) throw new Error("too_large");
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: "Bearer " + authToken
+      },
+      body: JSON.stringify({ image: dataUrl })
+    });
+
+    if (res.status === 401) {
+      lock("Sua sessão expirou. Entre novamente com a senha.");
+      return;
+    }
+
+    if (res.status === 413) throw new Error("too_large");
+    if (!res.ok) throw new Error("HTTP " + res.status);
+
+    const data = await res.json();
+    if (!data.url) throw new Error("invalid_response");
+
+    applyCover(data.url);
+    setUploadStatus("Imagem enviada. Clique em salvar para publicar.", "ok");
+  } catch (error) {
+    if (error.message === "too_large") {
+      setUploadStatus("A imagem continua pesada depois de otimizar. Use uma menor.", "error");
+    } else {
+      setUploadStatus("Não foi possível enviar a imagem. Tente novamente.", "error");
+    }
+    console.error(error);
+  } finally {
+    uploadingImage = false;
+    uploaderEl.classList.remove("is-busy");
+  }
+}
+
+imageInput.addEventListener("change", async (event) => {
+  const file = event.target.files?.[0];
+  event.target.value = "";
+  await uploadCover(file);
+});
+
+uploaderRemove.addEventListener("click", () => {
+  applyCover("");
+  setUploadStatus("");
+});
+
+["dragenter", "dragover"].forEach((type) => {
+  uploaderEl.addEventListener(type, (event) => {
+    event.preventDefault();
+    uploaderEl.classList.add("is-dragging");
+  });
+});
+
+["dragleave", "drop"].forEach((type) => {
+  uploaderEl.addEventListener(type, (event) => {
+    event.preventDefault();
+    if (type === "dragleave" && uploaderEl.contains(event.relatedTarget)) return;
+    uploaderEl.classList.remove("is-dragging");
+  });
+});
+
+uploaderEl.addEventListener("drop", (event) => {
+  const file = event.dataTransfer?.files?.[0];
+  if (file) uploadCover(file);
+});
+
 /* ---------- Catálogo ---------- */
 
 function renderList() {
@@ -244,8 +432,12 @@ function renderList() {
     const item = document.createElement("article");
     item.className = "admin-item";
     const tags = Array.isArray(project.tags) ? project.tags.filter(Boolean).join(" • ") : "";
+    const cover = String(project.cover || "").trim();
+    const thumb = cover
+      ? `<span class="admin-item__thumb"><img src="${escapeHtml(cover)}" alt="" loading="lazy"></span>`
+      : `<span class="admin-item__dot"></span>`;
     item.innerHTML = `
-      <span class="admin-item__dot"></span>
+      ${thumb}
       <div class="admin-item__info">
         <strong class="admin-item__title">${escapeHtml(project.name)}</strong>
         <p class="admin-item__meta">${tags ? tags + " • " : ""}${project.link ? "Possui link" : "Sem link"}</p>
@@ -266,6 +458,9 @@ function renderList() {
 function resetForm() {
   form.reset();
   idInput.value = "";
+  coverInput.value = "";
+  applyCover("");
+  setUploadStatus("");
   formTitle.textContent = "Adicionar novo projeto";
   submitLabel.textContent = "Salvar projeto";
   cancelEditBtn.hidden = true;
@@ -278,6 +473,8 @@ function fillForm(project) {
   tagsInput.value = Array.isArray(project.tags) ? project.tags.join(", ") : "";
   linkInput.value = project.link || "";
   coverInput.value = project.cover || "";
+  applyCover(project.cover || "");
+  setUploadStatus("");
   formTitle.textContent = "Editando projeto";
   submitLabel.textContent = "Atualizar projeto";
   cancelEditBtn.hidden = false;
@@ -286,6 +483,11 @@ function fillForm(project) {
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
+
+  if (uploadingImage) {
+    setUploadStatus("Aguarde o envio da imagem terminar para salvar.", "busy");
+    return;
+  }
 
   const tags = tagsInput.value
     .split(",")
