@@ -1,11 +1,7 @@
 const STORAGE_KEY = "ygsites-catalog-v1";
+const TOKEN_KEY = "ygsites-admin-token";
 
-/* ---------- Proteção por senha ---------- */
-
-const AUTH_KEY = "ygsites-admin-auth";
-const AUTH_SALT = "ygsites::";
-const AUTH_HASH = "e28849a0dbbbf3981868540a187c4e326599f9f0e260d6715132d5e14021d29d";
-const AUTH_HASH_FALLBACK = "98641730";
+/* ---------- Referências ---------- */
 
 const authGate = document.getElementById("auth-gate");
 const authForm = document.getElementById("auth-form");
@@ -15,46 +11,163 @@ const authToggle = document.getElementById("auth-toggle");
 const authSubmit = document.getElementById("auth-submit");
 const adminApp = document.getElementById("admin-app");
 const logoutBtn = document.getElementById("logout");
+const syncStatus = document.getElementById("sync-status");
 
-function fnv1a(text) {
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < text.length; i++) {
-    hash ^= text.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193) >>> 0;
+const form = document.getElementById("project-form");
+const idInput = document.getElementById("project-id");
+const nameInput = document.getElementById("project-name");
+const descInput = document.getElementById("project-desc");
+const tagsInput = document.getElementById("project-tags");
+const linkInput = document.getElementById("project-link");
+const coverInput = document.getElementById("project-cover");
+const listEl = document.getElementById("admin-list");
+const formTitle = document.getElementById("form-title");
+const submitLabel = document.getElementById("submit-label");
+const resetFormBtn = document.getElementById("reset-form");
+const cancelEditBtn = document.getElementById("cancel-edit");
+const exportBtn = document.getElementById("export-json");
+const importTrigger = document.getElementById("import-json-trigger");
+const importInput = document.getElementById("import-json");
+const clearAllBtn = document.getElementById("clear-all");
+
+/* ---------- Estado ---------- */
+
+let catalog = [];
+let authToken = sessionStorage.getItem(TOKEN_KEY) || "";
+
+/* ---------- Sincronização com o servidor ---------- */
+
+class UnauthorizedError extends Error {}
+
+function setSync(message, kind = "ok") {
+  if (!syncStatus) return;
+  if (!message) {
+    syncStatus.hidden = true;
+    syncStatus.textContent = "";
+    return;
   }
-  return hash.toString(16);
+  syncStatus.hidden = false;
+  syncStatus.textContent = message;
+  syncStatus.dataset.kind = kind;
 }
 
-async function hashPassword(value) {
-  const text = AUTH_SALT + value;
-  if (window.crypto && window.crypto.subtle) {
-    const data = new TextEncoder().encode(text);
-    const digest = await window.crypto.subtle.digest("SHA-256", data);
-    return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+function readCache() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
   }
-  return fnv1a(text);
 }
 
-function unlock({ remember = true } = {}) {
+function writeCache(items) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  } catch (error) {
+    console.warn("cache", error);
+  }
+}
+
+async function apiLogin(password) {
+  const res = await fetch("/api/login", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ password })
+  });
+
+  if (res.status === 429) throw new Error("Muitas tentativas. Aguarde alguns minutos.");
+  if (!res.ok) return null;
+
+  const data = await res.json();
+  if (!data.token) return null;
+
+  authToken = data.token;
+  sessionStorage.setItem(TOKEN_KEY, authToken);
+  return data;
+}
+
+async function apiRead() {
+  const res = await fetch("/api/catalog", { cache: "no-store" });
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const data = await res.json();
+  return Array.isArray(data.items) ? data.items : [];
+}
+
+async function apiSave(items) {
+  const res = await fetch("/api/catalog", {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      authorization: "Bearer " + authToken
+    },
+    body: JSON.stringify({ items })
+  });
+
+  if (res.status === 401) throw new UnauthorizedError("Sessão expirada");
+  if (!res.ok) throw new Error("HTTP " + res.status);
+
+  const data = await res.json();
+  return Array.isArray(data.items) ? data.items : items;
+}
+
+async function persist(items, successMessage = "Alterações publicadas no site") {
+  setSync("Salvando...", "busy");
+  try {
+    const saved = await apiSave(items);
+    catalog = saved;
+    writeCache(saved);
+    renderList();
+    setSync(successMessage, "ok");
+    return true;
+  } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      lock("Sua sessão expirou. Entre novamente com a senha.");
+      return false;
+    }
+    console.error(error);
+    setSync("Falha ao salvar. Tente novamente.", "error");
+    return false;
+  }
+}
+
+async function hydrate() {
+  try {
+    catalog = await apiRead();
+    writeCache(catalog);
+    renderList();
+    setSync("Catálogo sincronizado", "ok");
+  } catch (error) {
+    catalog = readCache();
+    renderList();
+    setSync("Sem conexão — exibindo cópia local", "warn");
+  }
+}
+
+/* ---------- Proteção por senha ---------- */
+
+function unlock() {
   adminApp.hidden = false;
   authGate.hidden = true;
   document.body.classList.remove("is-locked");
-  if (remember) sessionStorage.setItem(AUTH_KEY, "1");
 }
 
-function lock() {
+function lock(message = "") {
   adminApp.hidden = true;
   authGate.hidden = false;
   document.body.classList.add("is-locked");
-  sessionStorage.removeItem(AUTH_KEY);
+  sessionStorage.removeItem(TOKEN_KEY);
+  authToken = "";
   authInput.value = "";
   authInput.type = "password";
-  authError.hidden = true;
+  authError.textContent = message || "Senha incorreta. Tente novamente.";
+  authError.hidden = !message;
   authInput.focus();
 }
 
-if (sessionStorage.getItem(AUTH_KEY) === "1") {
-  unlock({ remember: false });
+if (authToken) {
+  unlock();
+  hydrate();
 } else {
   authInput.focus();
 }
@@ -71,17 +184,21 @@ authForm.addEventListener("submit", async (event) => {
   authSubmit.disabled = true;
   label.textContent = "Verificando...";
 
-  const hash = await hashPassword(value);
-  const ok = hash === AUTH_HASH || hash === AUTH_HASH_FALLBACK;
-
-  authSubmit.disabled = false;
-  label.textContent = "Entrar no painel";
-
-  if (ok) {
-    authError.hidden = true;
-    authInput.value = "";
-    unlock();
-    return;
+  try {
+    const session = await apiLogin(value);
+    if (session) {
+      authError.hidden = true;
+      authInput.value = "";
+      unlock();
+      await hydrate();
+      return;
+    }
+    authError.textContent = "Senha incorreta. Tente novamente.";
+  } catch (error) {
+    authError.textContent = error.message || "Não foi possível conectar. Tente novamente.";
+  } finally {
+    authSubmit.disabled = false;
+    label.textContent = "Entrar no painel";
   }
 
   authError.hidden = false;
@@ -104,48 +221,18 @@ authToggle.addEventListener("click", () => {
   authInput.focus();
 });
 
-logoutBtn.addEventListener("click", lock);
+logoutBtn.addEventListener("click", () => {
+  lock("");
+  authError.hidden = true;
+  setSync("");
+});
 
 /* ---------- Catálogo ---------- */
 
-const form = document.getElementById("project-form");
-const idInput = document.getElementById("project-id");
-const nameInput = document.getElementById("project-name");
-const descInput = document.getElementById("project-desc");
-const tagsInput = document.getElementById("project-tags");
-const linkInput = document.getElementById("project-link");
-const coverInput = document.getElementById("project-cover");
-const listEl = document.getElementById("admin-list");
-const formTitle = document.getElementById("form-title");
-const submitLabel = document.getElementById("submit-label");
-const resetFormBtn = document.getElementById("reset-form");
-const cancelEditBtn = document.getElementById("cancel-edit");
-const exportBtn = document.getElementById("export-json");
-const importTrigger = document.getElementById("import-json-trigger");
-const importInput = document.getElementById("import-json");
-const clearAllBtn = document.getElementById("clear-all");
-
-function loadProjects() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
-    console.warn(error);
-    return [];
-  }
-}
-
-function saveProjects(projects) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
-}
-
 function renderList() {
-  const projects = loadProjects();
   listEl.innerHTML = "";
 
-  if (!projects.length) {
+  if (!catalog.length) {
     const empty = document.createElement("div");
     empty.className = "admin-empty";
     empty.innerHTML = "<p>Nenhum projeto cadastrado ainda. Adicione o primeiro acima.</p>";
@@ -153,7 +240,7 @@ function renderList() {
     return;
   }
 
-  projects.forEach((project) => {
+  catalog.forEach((project) => {
     const item = document.createElement("article");
     item.className = "admin-item";
     const tags = Array.isArray(project.tags) ? project.tags.filter(Boolean).join(" • ") : "";
@@ -164,10 +251,10 @@ function renderList() {
         <p class="admin-item__meta">${tags ? tags + " • " : ""}${project.link ? "Possui link" : "Sem link"}</p>
       </div>
       <div class="admin-item__actions">
-        <button class="icon-btn" data-action="edit" data-id="${project.id}" aria-label="Editar">
+        <button class="icon-btn" data-action="edit" data-id="${escapeHtml(project.id)}" aria-label="Editar">
           <i class="ri-pencil-line"></i>
         </button>
-        <button class="icon-btn" data-action="remove" data-id="${project.id}" aria-label="Remover">
+        <button class="icon-btn" data-action="remove" data-id="${escapeHtml(project.id)}" aria-label="Remover">
           <i class="ri-delete-bin-line"></i>
         </button>
       </div>
@@ -197,84 +284,68 @@ function fillForm(project) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-form.addEventListener("submit", (event) => {
+form.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const projects = loadProjects();
+
   const tags = tagsInput.value
     .split(",")
     .map((tag) => tag.trim())
     .filter(Boolean);
 
-  if (idInput.value) {
-    const index = projects.findIndex((project) => project.id === idInput.value);
-    if (index >= 0) {
-      projects[index] = {
-        ...projects[index],
-        name: nameInput.value.trim(),
-        description: descInput.value.trim(),
-        tags,
-        link: linkInput.value.trim(),
-        cover: coverInput.value.trim()
-      };
-      saveProjects(projects);
-      resetForm();
-      renderList();
-      return;
-    }
-  }
-
-  const newProject = {
-    id: "yg-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6),
+  const next = catalog.slice();
+  const fields = {
     name: nameInput.value.trim(),
     description: descInput.value.trim(),
     tags,
     link: linkInput.value.trim(),
-    cover: coverInput.value.trim(),
-    createdAt: Date.now()
+    cover: coverInput.value.trim()
   };
 
-  projects.unshift(newProject);
-  saveProjects(projects);
-  resetForm();
-  renderList();
+  const editIndex = next.findIndex((project) => project.id === idInput.value);
+
+  if (editIndex >= 0) {
+    next[editIndex] = { ...next[editIndex], ...fields };
+  } else {
+    next.unshift({
+      id: "yg-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6),
+      ...fields,
+      createdAt: Date.now()
+    });
+  }
+
+  const ok = await persist(next);
+  if (ok) resetForm();
 });
 
-listEl.addEventListener("click", (event) => {
+listEl.addEventListener("click", async (event) => {
   const button = event.target.closest("button[data-action]");
   if (!button) return;
-  const projects = loadProjects();
   const id = button.dataset.id;
 
   if (button.dataset.action === "edit") {
-    const project = projects.find((item) => item.id === id);
+    const project = catalog.find((item) => item.id === id);
     if (project) fillForm(project);
     return;
   }
 
   if (button.dataset.action === "remove") {
-    const confirmed = confirm("Remover este projeto do catálogo?");
-    if (!confirmed) return;
-    const filtered = projects.filter((item) => item.id !== id);
-    saveProjects(filtered);
+    if (!confirm("Remover este projeto do catálogo? Ele sai do site na hora.")) return;
+    await persist(catalog.filter((item) => item.id !== id), "Projeto removido do site");
     resetForm();
-    renderList();
   }
 });
 
 resetFormBtn.addEventListener("click", resetForm);
 cancelEditBtn.addEventListener("click", resetForm);
 
-clearAllBtn.addEventListener("click", () => {
-  const confirmed = confirm("Isso vai apagar TODO o catálogo deste navegador. Tem certeza?");
-  if (!confirmed) return;
-  localStorage.removeItem(STORAGE_KEY);
-  resetForm();
-  renderList();
+clearAllBtn.addEventListener("click", async () => {
+  if (!confirm("Isso vai apagar TODO o catálogo do site. Tem certeza?")) return;
+  const ok = await persist([], "Catálogo esvaziado");
+  if (ok) resetForm();
 });
 
 exportBtn.addEventListener("click", () => {
-  const projects = loadProjects();
-  const blob = new Blob([JSON.stringify(projects, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify(catalog, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -290,14 +361,17 @@ importTrigger.addEventListener("click", () => importInput.click());
 importInput.addEventListener("change", async (event) => {
   const file = event.target.files?.[0];
   if (!file) return;
+
   try {
     const text = await file.text();
     const parsed = JSON.parse(text);
     if (!Array.isArray(parsed)) throw new Error("Formato inválido");
-    saveProjects(parsed);
-    resetForm();
-    renderList();
-    alert("Catálogo importado com sucesso!");
+
+    const ok = await persist(parsed, "Catálogo importado e publicado");
+    if (ok) {
+      resetForm();
+      alert("Catálogo importado com sucesso!");
+    }
   } catch (error) {
     alert("Não foi possível importar. Verifique se é um JSON válido exportado pelo painel.");
   } finally {
@@ -313,5 +387,3 @@ function escapeHtml(value = "") {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
-
-document.addEventListener("DOMContentLoaded", renderList);

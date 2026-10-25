@@ -27,30 +27,52 @@ const defaultProjects = [
   }
 ];
 
-function loadProjects() {
+function readCache() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultProjects;
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length ? parsed : defaultProjects;
+    return Array.isArray(parsed) ? parsed : defaultProjects;
   } catch (error) {
-    console.warn("Não foi possível carregar o catálogo", error);
+    console.warn("Não foi possível ler o cache do catálogo", error);
     return defaultProjects;
   }
 }
 
-function renderPortfolio() {
+function writeCache(items) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  } catch (error) {
+    console.warn("Não foi possível guardar o cache do catálogo", error);
+  }
+}
+
+async function loadProjects() {
+  try {
+    const res = await fetch("/api/catalog", { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    if (!Array.isArray(data.items)) throw new Error("Formato inesperado");
+    writeCache(data.items);
+    return data.items;
+  } catch (error) {
+    console.warn("Catálogo indisponível, usando cache local", error);
+    return null;
+  }
+}
+
+function renderPortfolio(projects) {
   const grid = document.getElementById("portfolio-grid");
   if (!grid) return;
-  const projects = loadProjects();
+
   grid.innerHTML = "";
 
   if (!projects.length) {
     const empty = document.createElement("article");
     empty.className = "portfolio-empty";
     empty.innerHTML = `
-      <h3>Catálogo vazio</h3>
-      <p>Abra o <a href="admin.html" style="color: var(--text-primary); text-decoration: underline;">painel</a> e adicione seu primeiro site para vender.</p>
+      <h3>Catálogo em atualização</h3>
+      <p>Em breve novos projetos por aqui. Fale com a gente para ver os trabalhos mais recentes.</p>
     `;
     grid.appendChild(empty);
     return;
@@ -103,7 +125,10 @@ function setYear() {
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   setYear();
-  renderPortfolio();
+  renderPortfolio(readCache());
+
+  const items = await loadProjects();
+  if (items) renderPortfolio(items);
 });
