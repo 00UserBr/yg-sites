@@ -178,6 +178,7 @@
 .hero__bg {
   position: absolute;
   inset: 0;
+  overflow: hidden;
   background: var(--surface);
 }
 
@@ -684,6 +685,10 @@
   color: #93c5fd;
 }
 
+.cta__contact-note::before {
+  content: "• ";
+}
+
 .cta__aside {
   position: relative;
   grid-column: 8 / span 5;
@@ -760,6 +765,13 @@
 }
 
 @media (max-width: 1080px) {
+  .hero__container,
+  .footer__container,
+  .portfolio__grid {
+    grid-template-columns: 1fr;
+    gap: clamp(1.6rem, 4vw, 2.4rem);
+  }
+
   .hero__content {
     grid-column: 1 / -1;
   }
@@ -787,6 +799,11 @@
 
   .cta__badge {
     align-self: flex-start;
+  }
+
+  .cta__inner {
+    grid-template-columns: 1fr;
+    gap: 2rem;
   }
 
   .footer__brand {
@@ -882,3 +899,181 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------- Celular ---------- */
+@media (max-width: 640px) {
+  .hero {
+    padding-top: clamp(6.5rem, 26vw, 8rem);
+  }
+
+  .hero__title {
+    font-size: clamp(1.95rem, 8.6vw, 2.5rem);
+    line-height: 1.12;
+  }
+
+  .hero__kicker {
+    font-size: 0.72rem;
+    line-height: 1.5;
+  }
+
+  .hero__lead {
+    font-size: 1rem;
+  }
+
+  .hero__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero__actions .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.9rem 1.2rem;
+  }
+
+  .hero__trust-item {
+    align-items: flex-start;
+    font-size: 0.92rem;
+  }
+
+  .hero__panel-inner {
+    padding: 1.4rem;
+  }
+
+  .hero__panel-metric {
+    gap: 1rem;
+  }
+
+  .trust-bar__inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.9rem;
+    padding: 1.2rem;
+    border-radius: 1.2rem;
+  }
+
+  .trust-bar__text {
+    font-size: 0.95rem;
+  }
+
+  .trust-bar__list {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .portfolio-card {
+    min-height: 0;
+  }
+
+  .portfolio-card__top {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .portfolio-card__tags {
+    gap: 0.45rem;
+  }
+
+  .tag {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .portfolio-card__media {
+    min-height: 130px;
+  }
+
+  .portfolio-card__media.has-image {
+    flex: 0 0 auto;
+    min-height: 0;
+  }
+
+  .portfolio-card__media.has-image .portfolio-card__image {
+    position: static;
+    width: 100%;
+    height: auto;
+    max-height: 340px;
+    object-position: top center;
+  }
+
+  .portfolio-card__content {
+    padding: 1.4rem;
+  }
+
+  .portfolio-card__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .portfolio-card__actions .btn {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.86rem;
+    padding: 0.8rem 1rem;
+    text-align: center;
+  }
+
+  .cta__inner {
+    padding: 1.7rem 1.25rem;
+    border-radius: 1.4rem;
+  }
+
+  .cta__title {
+    font-size: clamp(1.55rem, 7.2vw, 2rem);
+    max-width: none;
+  }
+
+  .cta__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cta__actions .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.9rem 1rem;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+
+  .cta__contact {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.4rem 0.5rem;
+  }
+
+  .cta__contact-note {
+    flex-basis: 100%;
+  }
+
+  .cta__contact-note::before {
+    content: "";
+  }
+
+  .cta__badge {
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .footer__links {
+    grid-template-columns: 1fr;
+    gap: 1.4rem;
+  }
+
+  .footer__list {
+    gap: 0.75rem;
+  }
+
+  .footer__list a,
+  .footer__desc {
+    overflow-wrap: anywhere;
+  }
+
+  .footer__bottom {
+    font-size: 0.85rem;
+  }
+}
+

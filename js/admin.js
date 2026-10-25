@@ -592,6 +592,61 @@ importInput.addEventListener("change", async (event) => {
   }
 });
 
+/* ---------- Prévia da versão para celular ---------- */
+
+const previewBtn = document.getElementById("preview-mobile");
+const previewModal = document.getElementById("device-preview");
+const previewFrame = document.getElementById("device-preview-frame");
+const previewClose = document.getElementById("device-preview-close");
+const previewReload = document.getElementById("device-preview-reload");
+const previewLabel = document.getElementById("device-preview-label");
+const previewSizeBtns = document.querySelectorAll("[data-preview-size]");
+
+function setPreviewSize(size) {
+  const width = Number(size) || 390;
+  previewFrame.style.width = width + "px";
+  previewLabel.textContent = width + " × 844 px";
+  previewSizeBtns.forEach((button) => {
+    button.classList.toggle("is-active", Number(button.dataset.previewSize) === width);
+  });
+}
+
+function openPreview() {
+  previewModal.hidden = false;
+  document.body.classList.add("is-preview-open");
+  if (!previewFrame.getAttribute("src") || previewFrame.getAttribute("src") === "about:blank") {
+    previewFrame.src = "index.html";
+  }
+  previewClose.focus();
+}
+
+function closePreview() {
+  previewModal.hidden = true;
+  document.body.classList.remove("is-preview-open");
+  previewBtn.focus();
+}
+
+previewBtn.addEventListener("click", openPreview);
+previewClose.addEventListener("click", closePreview);
+
+previewModal.addEventListener("click", (event) => {
+  if (event.target.matches("[data-preview-close]")) closePreview();
+});
+
+previewReload.addEventListener("click", () => {
+  previewFrame.src = "index.html?t=" + Date.now();
+});
+
+previewSizeBtns.forEach((button) => {
+  button.addEventListener("click", () => setPreviewSize(button.dataset.previewSize));
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !previewModal.hidden) closePreview();
+});
+
+setPreviewSize(390);
+
 function escapeHtml(value = "") {
   return String(value)
     .replace(/&/g, "&amp;")

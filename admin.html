@@ -65,15 +65,20 @@
       </div>
       <div class="header__actions">
         <span class="admin-sync" id="sync-status" hidden></span>
-        <button class="btn btn--ghost" id="export-json">
+        <button class="btn btn--ghost" id="preview-mobile" title="Ver o site na versão de celular"
+          aria-label="Ver o site na versão de celular">
+          <i class="ri-smartphone-line"></i>
+          <span>Ver no celular</span>
+        </button>
+        <button class="btn btn--ghost" id="export-json" aria-label="Exportar JSON">
           <i class="ri-download-2-line"></i>
           <span>Exportar JSON</span>
         </button>
-        <button class="btn btn--primary" id="import-json-trigger">
+        <button class="btn btn--primary" id="import-json-trigger" aria-label="Importar JSON">
           <i class="ri-upload-2-line"></i>
           <span>Importar JSON</span>
         </button>
-        <button class="btn btn--ghost admin-logout" id="logout" title="Sair do painel">
+        <button class="btn btn--ghost admin-logout" id="logout" title="Sair do painel" aria-label="Sair do painel">
           <i class="ri-lock-line"></i>
           <span>Sair</span>
         </button>
@@ -175,6 +180,36 @@
       </div>
     </div>
   </main>
+  </div>
+
+  <div class="device-preview" id="device-preview" hidden>
+    <div class="device-preview__backdrop" data-preview-close></div>
+    <div class="device-preview__panel" role="dialog" aria-modal="true" aria-label="Prévia da versão para celular">
+      <header class="device-preview__header">
+        <div class="device-preview__title">
+          <strong>Versão para celular</strong>
+          <span id="device-preview-label">390 × 844 px</span>
+        </div>
+        <div class="device-preview__sizes" role="group" aria-label="Tamanho da tela">
+          <button class="chip" type="button" data-preview-size="360" aria-label="Tela de 360 pixels">360</button>
+          <button class="chip is-active" type="button" data-preview-size="390" aria-label="Tela de 390 pixels">390</button>
+          <button class="chip" type="button" data-preview-size="414" aria-label="Tela de 414 pixels">414</button>
+        </div>
+        <div class="device-preview__tools">
+          <button class="icon-btn" type="button" id="device-preview-reload" aria-label="Recarregar prévia"
+            title="Recarregar">
+            <i class="ri-refresh-line"></i>
+          </button>
+          <button class="icon-btn" type="button" id="device-preview-close" aria-label="Fechar prévia" title="Fechar">
+            <i class="ri-close-line"></i>
+          </button>
+        </div>
+      </header>
+      <div class="device-preview__frame">
+        <iframe id="device-preview-frame" title="Prévia da versão para celular" src="about:blank"></iframe>
+      </div>
+      <p class="device-preview__hint">É o mesmo site, só que na largura de um celular — o layout se adapta sozinho.</p>
+    </div>
   </div>
 
   <script src="js/admin.js"></script>
