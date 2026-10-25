@@ -279,11 +279,22 @@ function readFileAsDataUrl(file) {
   });
 }
 
-function loadImageElement(src) {
+function loadImageElement(src, timeoutMs = 8000) {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("decode_failed"));
+    let settled = false;
+
+    const finish = (fn, value) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      fn(value);
+    };
+
+    const timer = setTimeout(() => finish(reject, new Error("decode_timeout")), timeoutMs);
+
+    img.onload = () => finish(resolve, img);
+    img.onerror = () => finish(reject, new Error("decode_failed"));
     img.src = src;
   });
 }
