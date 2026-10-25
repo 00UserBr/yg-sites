@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="YgSites">
+  <defs>
+    <linearGradient id="fav-bg" x1="16" y1="0" x2="16" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#122138"/>
+      <stop offset=".6" stop-color="#070c17"/>
+      <stop offset="1" stop-color="#03050a"/>
+    </linearGradient>
+    <linearGradient id="fav-ring" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#93c5fd"/>
+      <stop offset=".45" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#1d4ed8"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="32" height="32" rx="8" fill="url(#fav-bg)"/>
+
+  <!-- G (traço mais grosso para leitura em 16px) -->
+  <path d="M21.4 16h6.1A11.5 11.5 0 1 1 23.2 7.2" fill="none" stroke="url(#fav-ring)" stroke-width="2.6"
+    stroke-linecap="round"/>
+  <!-- Y -->
+  <path d="M10.9 11 16 16.2 21.1 11M16 16.2V23" fill="none" stroke="#ffffff" stroke-width="2.7"
+    stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

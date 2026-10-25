@@ -1,17 +1,38 @@
-# YG Sites
+# YgSites
 
-Site institucional + painel de catálogo da **YG Sites** (azul, preto e branco).
+Site institucional + painel de catálogo da **YgSites** (azul, preto e branco).
 
 - **Site:** https://ygsites.vercel.app
 - **Painel (com senha):** https://ygsites.vercel.app/admin.html
 - **WhatsApp:** (19) 99247-5445 — https://wa.me/5519992475445
 - **Dados do catálogo (privado):** https://github.com/00UserBr/yg-sites-data
 
+## Identidade visual
+
+A marca é um monograma **Y dentro de um G**, desenhado em um único traço
+contínuo: o anel azul é o G (aberto, com a barra à direita) e o Y branco ocupa o
+centro. Fundo em degradê azul-escuro → preto.
+
+| Arquivo | Uso |
+|---|---|
+| `assets/logo-mark.svg` | símbolo (cabeçalho, rodapé, painel, login) |
+| `assets/favicon.svg` | favicon otimizado para 16/32 px |
+| `assets/apple-touch-icon.png` | ícone 180×180 para iOS |
+| `assets/logo-ygsites.png` | lockup horizontal (símbolo + nome), fundo transparente |
+| `assets/logo-ygsites-quadrado.png` | 1080×1080 para Instagram/WhatsApp |
+| `assets/og-image.png` | 1200×630 para compartilhamento em redes sociais |
+
+Cores: azul `#3b82f6` → `#1e40af`, branco `#f8fafc`, fundo `#05070f`.
+
+O nome é escrito em **Sora**: "Yg" em 800 e "Sites" em 500, com "Web Studio"
+espaçado embaixo (caixa alta, `letter-spacing` 0.3em).
+
 ## Estrutura
 
 ```
 index.html        página principal (hero, portfólio, processo, contato)
 admin.html        painel protegido por senha para editar o catálogo
+assets/           logo, favicon, ícone iOS e imagem de compartilhamento
 css/base.css      tokens de cor, tipografia e reset
 css/home.css      estilos da página principal
 css/admin.css     estilos do painel e da tela de senha
